@@ -55,7 +55,8 @@ class SecondThread extends Thread {
         }
 
         while (true) {
-            synchronized (mFirstThread) {
+            System.out.print("x2");
+            synchronized (this) {
                 if (mFirstThread.isExiting()) {
                     synchronized (this) {
                         mExiting = true;
@@ -63,7 +64,9 @@ class SecondThread extends Thread {
                     }
                     break;
                 }
+            }
 
+            synchronized (mFirstThread) {
                 if (mFirstThread.isWaiting()) {
                     try {
                         loading();
@@ -73,12 +76,12 @@ class SecondThread extends Thread {
                     mFirstThread.setWait(false);
                     mFirstThread.notify();
                 }
-                while (!mFirstThread.isWaiting()) {
-                    try {
-                        Thread.sleep(250);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+            }
+            while (!mFirstThread.isWaiting()) {
+                try {
+                    Thread.sleep(250);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
         }

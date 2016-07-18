@@ -5,9 +5,9 @@ import com.kbajpai.utils.Numbers;
 import java.util.List;
 
 public class FirstThread extends Thread {
-    private final int LOW_VAL = 1;
-    private final int HIGH_VAL = 100;
-    private final int TOTAL_RAND = 50;
+    private final int LOW_VAL = 10000;
+    private final int HIGH_VAL = 99999;
+    private final int TOTAL_RAND = 10;
 
     private final String mThreadName;
     private final Thread mCurrThread;
@@ -57,17 +57,11 @@ public class FirstThread extends Thread {
                     notify();
                 }
             }
-            while (mWait) {
-                synchronized (mSecondThread) {
-                    if (mSecondThread.isWait()) {
-                        break;
-                    }
-                }
-            }
         }
         try {
             synchronized (this) {
                 while (!mSecondThread.isExited()) {
+                    System.out.println("FIRST_EXITING");
                     wait(250);
                 }
             }
