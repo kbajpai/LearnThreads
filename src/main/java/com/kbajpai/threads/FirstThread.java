@@ -7,7 +7,7 @@ import java.util.List;
 public class FirstThread extends Thread {
     private final int LOW_VAL = 10000;
     private final int HIGH_VAL = 99999;
-    private final int TOTAL_RAND = 10;
+    private final int TOTAL_RAND;
 
     private final String mThreadName;
     private final Thread mCurrThread;
@@ -17,7 +17,8 @@ public class FirstThread extends Thread {
     private boolean mWait = false;
     private boolean mExiting = false;
 
-    public FirstThread() {
+    public FirstThread(int loopSize) {
+        TOTAL_RAND = loopSize;
         mThreadName = "FIRST_THREAD";
         mCurrThread = new Thread(this, mThreadName);
         mSecondThread = new SecondThread(this);
@@ -32,7 +33,7 @@ public class FirstThread extends Thread {
         return mWait;
     }
 
-    public void setWait(boolean wait) {
+    void setWait(boolean wait) {
         mWait = wait;
     }
 
@@ -45,34 +46,54 @@ public class FirstThread extends Thread {
         System.out.println("STARTING: " + mThreadName);
 
         List<Integer> randStops = Numbers.randList(TOTAL_RAND, LOW_VAL, HIGH_VAL);
+        int j = 0;
         for (int i = LOW_VAL; i < HIGH_VAL; i++) {
             synchronized (this) {
+                while (mWait) {
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
                 if (i + 1 >= HIGH_VAL) {
                     mExiting = true;
                     notify();
                 }
                 if (randStops.contains(i)) {
-                    printResults(i);
+                    printResults(i, ++j);
                     mWait = true;
                     notify();
                 }
             }
         }
-        try {
-            synchronized (this) {
-                while (!mSecondThread.isExited()) {
-                    System.out.println("FIRST_EXITING");
-                    wait(250);
+        while (true) {
+            synchronized (mSecondThread) {
+                System.out.println("Exiting: " + mThreadName);
+                if (mSecondThread.isExited()) {
+                    break;
                 }
+                mSecondThread.notify();
             }
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        System.out.println("EXITED: " + mThreadName);
+    }
+
+    private void printResults(int i, int j) {
+        System.out.format("%02d: ", j);
+        try {
+            Thread.sleep(Numbers.getRand(0, 5000));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println("Exiting: " + mThreadName);
-    }
-
-    private void printResults(int i) {
-        System.out.format("FIRST: %05d", i);
+        System.out.format("%05d", i);
     }
 
     boolean isExiting() {

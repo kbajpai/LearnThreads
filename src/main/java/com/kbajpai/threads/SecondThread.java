@@ -54,19 +54,19 @@ class SecondThread extends Thread {
             }
         }
 
-        while (true) {
-            System.out.print("x2");
-            synchronized (this) {
-                if (mFirstThread.isExiting()) {
-                    synchronized (this) {
-                        mExiting = true;
-                        notify();
+        synchronized (mFirstThread) {
+            while (!mFirstThread.isExiting()) {
+                while (!mFirstThread.isWaiting()) {
+                    try {
+                        mFirstThread.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-                    break;
+                    if (mFirstThread.isExiting()) {
+                        break;
+                    }
                 }
-            }
 
-            synchronized (mFirstThread) {
                 if (mFirstThread.isWaiting()) {
                     try {
                         loading();
@@ -77,18 +77,13 @@ class SecondThread extends Thread {
                     mFirstThread.notify();
                 }
             }
-            while (!mFirstThread.isWaiting()) {
-                try {
-                    Thread.sleep(250);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+        }
+        System.out.println("LOOP_DONE: " + mThreadName);
+        synchronized (this) {
+            mExiting = true;
+            notify();
         }
 
-        synchronized (mFirstThread) {
-            mExiting = true;
-        }
         System.out.println("Exiting: " + mThreadName);
     }
 
