@@ -8,7 +8,7 @@ class SecondThread extends Thread {
     private final String mThreadName;
     private final Thread mCurrentThread;
     private final int MIN_DOTS = 3;
-    private final int MAX_DOTS = 50;
+    private final int MAX_DOTS = 10;
     private boolean mStop = false;
     private boolean mWait = true;
 
@@ -22,7 +22,7 @@ class SecondThread extends Thread {
         mStop = true;
     }
 
-    public boolean isWait() {
+    boolean isWait() {
         return mWait;
     }
 
@@ -55,30 +55,31 @@ class SecondThread extends Thread {
         }
 
         while (true) {
-            if (mFirstThread.isExiting()) {
-                synchronized (this) {
-                    mExiting = true;
-                    notify();
-                }
-                break;
-            }
             synchronized (mFirstThread) {
+                if (mFirstThread.isExiting()) {
+                    synchronized (this) {
+                        mExiting = true;
+                        notify();
+                    }
+                    break;
+                }
+
                 if (mFirstThread.isWaiting()) {
                     try {
                         loading();
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
+                    mFirstThread.setWait(false);
+                    mFirstThread.notify();
                 }
-            }
-            synchronized (this) {
-                mWait = true;
-                notify();
-            }
-            try {
-                Thread.sleep(250);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                while (!mFirstThread.isWaiting()) {
+                    try {
+                        Thread.sleep(250);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
 

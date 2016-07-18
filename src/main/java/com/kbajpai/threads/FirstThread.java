@@ -5,8 +5,8 @@ import com.kbajpai.utils.Numbers;
 import java.util.List;
 
 public class FirstThread extends Thread {
-    private final int LOW_VAL = 10000;
-    private final int HIGH_VAL = 99999;
+    private final int LOW_VAL = 1;
+    private final int HIGH_VAL = 100;
     private final int TOTAL_RAND = 50;
 
     private final String mThreadName;
@@ -32,6 +32,10 @@ public class FirstThread extends Thread {
         return mWait;
     }
 
+    public void setWait(boolean wait) {
+        mWait = wait;
+    }
+
     @Override
     public void run() {
         synchronized (this) {
@@ -51,21 +55,12 @@ public class FirstThread extends Thread {
                     printResults(i);
                     mWait = true;
                     notify();
-                    try {
-                        Thread.sleep(250);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
                 }
             }
-            synchronized (mSecondThread) {
-                while (!mSecondThread.isWait()) {
-                    mWait = false;
-                    mSecondThread.notify();
-                    try {
-                        wait(250);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+            while (mWait) {
+                synchronized (mSecondThread) {
+                    if (mSecondThread.isWait()) {
+                        break;
                     }
                 }
             }
