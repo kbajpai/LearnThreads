@@ -7,7 +7,7 @@ import java.util.List;
 public class FirstThread extends Thread {
     private final int LOW_VAL = 10000;
     private final int HIGH_VAL = 99999;
-    private final int TOTAL_RAND = 5;
+    private final int TOTAL_RAND = 50;
 
     private final String mThreadName;
     private final Thread mCurrThread;
@@ -51,6 +51,22 @@ public class FirstThread extends Thread {
                     printResults(i);
                     mWait = true;
                     notify();
+                    try {
+                        Thread.sleep(250);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            synchronized (mSecondThread) {
+                while (!mSecondThread.isWait()) {
+                    mWait = false;
+                    mSecondThread.notify();
+                    try {
+                        wait(250);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -59,7 +75,6 @@ public class FirstThread extends Thread {
                 while (!mSecondThread.isExited()) {
                     wait(250);
                 }
-
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -68,8 +83,7 @@ public class FirstThread extends Thread {
     }
 
     private void printResults(int i) {
-        System.out.print("FIRST: ");
-        System.out.format("%05d", i);
+        System.out.format("FIRST: %05d", i);
     }
 
     boolean isExiting() {

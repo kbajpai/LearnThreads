@@ -41,6 +41,7 @@ class SecondThread extends Thread {
     @Override
     public void run() {
         System.out.println("ENTERING: " + mThreadName);
+
         while (true) {
             if (mFirstThread.hasStarted()) {
                 synchronized (this) {
@@ -53,7 +54,6 @@ class SecondThread extends Thread {
             }
         }
 
-        System.out.println("STARTING");
         while (true) {
             if (mFirstThread.isExiting()) {
                 synchronized (this) {
@@ -62,16 +62,21 @@ class SecondThread extends Thread {
                 }
                 break;
             }
-            try {
-                synchronized (mFirstThread) {
-                    if (!mFirstThread.isWaiting()) {
+            synchronized (mFirstThread) {
+                if (mFirstThread.isWaiting()) {
+                    try {
                         loading();
-                        synchronized (this) {
-                            mWait = true;
-                            notify();
-                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
+            }
+            synchronized (this) {
+                mWait = true;
+                notify();
+            }
+            try {
+                Thread.sleep(250);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
